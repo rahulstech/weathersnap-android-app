@@ -6,6 +6,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -15,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import rahulstech.android.weathersnap.ui.component.InfoBox
@@ -33,11 +37,24 @@ fun CreateReportRoute(
     onExit: () -> Unit,
     viewModel: CreateReportViewModel
 ) {
-    val imageCaptureResult = viewModel.imageCaptureResult
-    android.util.Log.d("CreateReportScreen", "CreateReportRoute: imageCaptureResult=$imageCaptureResult")
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    LaunchedEffect(Unit) {
+        viewModel.saveSuccess.collect { success ->
+            if (success) {
+                // pop this scree so that we don't came back from SaveReports screen on back
+                onExit()
+                
+                // now navigate to SavedReports screen
+                onNavigate(AppRoute.SavedReports)
+            }
+        }
+    }
+
     CreateReportScreen(
-        weatherResource = viewModel.weatherResource,
-        imageCaptureResult = imageCaptureResult,
+        uiState = uiState,
+        onNoteChange = viewModel::onNoteChange,
+        onSaveReport = viewModel::saveReport,
         onNavigate = onNavigate,
         onExit = onExit
     )
@@ -45,11 +62,21 @@ fun CreateReportRoute(
 
 @Composable
 fun CreateReportScreen(
-    weatherResource: Resource<WeatherReport>,
-    imageCaptureResult: ImageCaptureResult?,
+    uiState: CreateReportUIState,
+    onNoteChange: (String) -> Unit,
+    onSaveReport: () -> Unit,
     onNavigate: (AppRoute) -> Unit,
     onExit: () -> Unit
 ) {
+    val weatherResource = remember(uiState.isWeatherLoading, uiState.weatherReport, uiState.weatherLoadError) {
+        when {
+            uiState.isWeatherLoading -> Resource.Loading
+            uiState.weatherLoadError != null -> Resource.Error(Exception(uiState.weatherLoadError))
+            uiState.weatherReport != null -> Resource.Success(uiState.weatherReport)
+            else -> Resource.Idle
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -68,18 +95,30 @@ fun CreateReportScreen(
         WeatherInfoSection(weatherResource = weatherResource)
 
         PhotoCaptureCard(
-            imageCaptureResult = imageCaptureResult,
+            imageCaptureResult = uiState.imageCaptureResult,
             onCaptureClick = { onNavigate(AppRoute.Camera) }
         )
 
-        NotesCard()
+        NotesCard(
+            note = uiState.note ?: "",
+            onNoteChange = onNoteChange
+        )
 
         Button(
-            onClick = { /* TODO */ },
+            onClick = onSaveReport,
+            enabled = uiState.imageCaptureResult != null && uiState.weatherReport != null && !uiState.isSaving,
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.extraLarge
         ) {
-            Text("Save Report", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+            if (uiState.isSaving) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text("Save Report", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+            }
         }
     }
 }
@@ -116,7 +155,7 @@ fun PhotoCaptureCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .heightIn(min = 200.dp)
                     .background(
                         brush = Brush.horizontalGradient(
                             colors = listOf(
@@ -188,7 +227,10 @@ fun PhotoCaptureCard(
 }
 
 @Composable
-fun NotesCard() {
+fun NotesCard(
+    note: String,
+    onNoteChange: (String) -> Unit
+) {
     Card(
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
@@ -206,8 +248,8 @@ fun NotesCard() {
                 fontWeight = FontWeight.Bold
             )
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = note,
+                onValueChange = onNoteChange,
                 placeholder = { Text("Notes", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -226,26 +268,35 @@ fun NotesCard() {
 fun CreateReportScreenPreview() {
 
     val previewData = WeatherReport(
-        id = 1,
-        cityName = "San Francisco",
-        country = "USA",
-        temperature = 18.5,
-        windSpeed = 12.0,
-        weatherCode = 1,
-        surfacePressure = 1012.0,
-        humidity = 65,
-        time = LocalDateTime.now(),
-        latitude = "37.7749",
-        longitude = "-122.4194"
+        city = rahulstech.android.weathersnap.data.remote.model.CitySearchRemote(
+            id = 1,
+            name = "San Francisco",
+            country = "USA",
+            latitude = "37.7749",
+            longitude = "-122.4194"
+        ),
+        weather = rahulstech.android.weathersnap.data.remote.model.CurrentWeatherRemote(
+            time = LocalDateTime.now(),
+            temperature = 18.5,
+            windSpeed = 12.0,
+            weatherCode = 1,
+            surfacePressure = 1012.0,
+            humidity = 65
+        ),
+        deviceTime = LocalDateTime.now()
     )
     WeatherSnapTheme {
         CreateReportScreen(
-            weatherResource = Resource.Success(previewData),
-            imageCaptureResult = ImageCaptureResult(
-                filePath = "",
-                rawSize = 1024 * 100,
-                compressSize = 1024 * 40
+            uiState = CreateReportUIState(
+                weatherReport = previewData,
+                imageCaptureResult = ImageCaptureResult(
+                    filePath = "",
+                    rawSize = 1024 * 100,
+                    compressSize = 1024 * 40
+                )
             ),
+            onNoteChange = {},
+            onSaveReport = {},
             onNavigate = {},
             onExit = {}
         )

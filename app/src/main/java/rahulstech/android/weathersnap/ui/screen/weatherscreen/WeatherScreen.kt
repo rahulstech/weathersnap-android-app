@@ -243,7 +243,7 @@ fun WeatherInfoSection(
                             val report = weatherResource.data
                             onNavigate(
                                 AppRoute.CreateReport(
-                                    city = CitySearchRemote(id=0,name=report.cityName, country = report.country, report.latitude, report.longitude)
+                                    city = report.city
                                 )
                             )
                         },

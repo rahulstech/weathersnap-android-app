@@ -64,7 +64,6 @@ class MainActivity : ComponentActivity() {
                             }
                             composable(AppRoute.SavedReports.name) {
                                 SavedReportsRoute(
-                                    onNavigate = onNavigate,
                                     onExit = onExit
                                 )
                             }

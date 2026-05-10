@@ -25,3 +25,4 @@ dependencyResolutionManagement {
 rootProject.name = "WeatherSnap"
 include(":app")
 include(":data:remote")
+include(":data:local")

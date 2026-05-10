@@ -25,6 +25,8 @@ import rahulstech.android.weathersnap.ui.util.getWeatherCondition
 import rahulstech.android.weathersnap.ui.util.shimmer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import rahulstech.android.weathersnap.data.remote.model.CitySearchRemote
+import rahulstech.android.weathersnap.data.remote.model.CurrentWeatherRemote
 import rahulstech.android.weathersnap.ui.theme.WeatherSnapTheme
 import java.time.LocalDateTime
 
@@ -57,6 +59,9 @@ fun WeatherInfoSuccessCard(
     report: WeatherReport,
     modifier: Modifier = Modifier
 ) {
+    val city = report.city
+    val weather = report.weather
+    
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -70,12 +75,12 @@ fun WeatherInfoSuccessCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "${report.cityName}, ${report.country}",
+                    text = "${city.name}, ${city.country}",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = getWeatherCondition(report.weatherCode),
+                    text = getWeatherCondition(weather.weatherCode),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -85,7 +90,7 @@ fun WeatherInfoSuccessCard(
                 shape = MaterialTheme.shapes.small,
             ) {
                 Text(
-                    text = "${report.temperature}°C",
+                    text = "${weather.temperature}°C",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -100,19 +105,19 @@ fun WeatherInfoSuccessCard(
         ) {
             InfoBox(
                 label = "Humidity",
-                text = "${report.humidity}%",
+                text = "${weather.humidity}%",
                 textColor = Color(0xFF4CAF50),
                 modifier = Modifier.weight(1f)
             )
             InfoBox(
                 label = "Wind",
-                text = "${report.windSpeed} m/s",
+                text = "${weather.windSpeed} km/h",
                 textColor = Color(0xFF42A5F5),
                 modifier = Modifier.weight(1f)
             )
             InfoBox(
                 label = "Pressure",
-                text = "${report.surfacePressure}",
+                text = "${weather.surfacePressure}",
                 textColor = Color(0xFFFFB74D),
                 modifier = Modifier.weight(1f)
             )
@@ -200,17 +205,22 @@ fun WeatherInfoShimmerCard(
 @Composable
 fun WeatherInfoCardPreview() {
     val previewData = WeatherReport(
-        id = 1,
-        cityName = "San Francisco",
-        country = "USA",
-        temperature = 18.5,
-        windSpeed = 12.0,
-        weatherCode = 1,
-        surfacePressure = 1012.0,
-        humidity = 65,
-        time = LocalDateTime.now(),
-        latitude = "",
-        longitude = ""
+        city = CitySearchRemote(
+            id = 1,
+            name = "San Francisco",
+            country = "USA",
+            latitude = "37.7749",
+            longitude = "-122.4194"
+        ),
+        weather = CurrentWeatherRemote(
+            time = LocalDateTime.now(),
+            temperature = 18.5,
+            windSpeed = 12.0,
+            weatherCode = 1,
+            surfacePressure = 1012.0,
+            humidity = 65
+        ),
+        deviceTime = LocalDateTime.now()
     )
     WeatherSnapTheme {
         WeatherInfoCard(

@@ -10,6 +10,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntSize
+import rahulstech.android.weathersnap.data.local.entity.SavedWeatherReportEntity
+import rahulstech.android.weathersnap.ui.model.ImageCaptureResult
+import rahulstech.android.weathersnap.ui.model.WeatherReport
+import java.time.LocalDateTime
 
 fun Modifier.shimmer(
     baseColor: Color = Color.LightGray.copy(alpha = 0.3f),
@@ -39,4 +43,26 @@ fun Modifier.shimmer(
     ).onGloballyPositioned {
         size = it.size
     }
+}
+
+fun ImageCaptureResult.toEntity(report: WeatherReport, note: String? = null): SavedWeatherReportEntity {
+    val city = report.city
+    val weather = report.weather
+    return SavedWeatherReportEntity(
+        cityName = city.name,
+        countryName = city.country,
+        longitude = city.longitude,
+        latitude = city.latitude,
+        weatherTime = weather.time,
+        temperature = weather.temperature,
+        windSpeed = weather.windSpeed,
+        weatherCode = weather.weatherCode,
+        surfacePressure = weather.surfacePressure,
+        humidity = weather.humidity,
+        snapFile = this.filePath,
+        rawSize = this.rawSize,
+        compressedSize = this.compressSize,
+        dateTime = LocalDateTime.now(),
+        note = note
+    )
 }

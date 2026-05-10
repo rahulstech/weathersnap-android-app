@@ -63,7 +63,7 @@ fun CameraRoute(
     CameraScreen(
         onClose = onExit,
         onCapture = {
-            viewModel.imageCaptureResult = it
+            viewModel.onImageCaptured(it)
             onExit()
         }
     )
