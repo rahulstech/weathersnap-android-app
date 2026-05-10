@@ -15,7 +15,9 @@ data class WeatherReport(
     val weatherCode: Int,
     val surfacePressure: Double,
     val humidity: Int,
-    val time: LocalDateTime
+    val time: LocalDateTime,
+    val latitude: String,
+    val longitude: String
 ) {
     companion object {
         fun fromResponse(city: CitySearchRemote, response: CurrentWeatherResponse): WeatherReport {
@@ -36,7 +38,9 @@ data class WeatherReport(
                 weatherCode = current.weatherCode,
                 surfacePressure = current.surfacePressure,
                 humidity = current.humidity,
-                time = deviceLocalTime
+                time = deviceLocalTime,
+                latitude = city.latitude,
+                longitude = city.longitude
             )
         }
     }

@@ -1,5 +1,6 @@
 package rahulstech.android.weathersnap.ui.screen.savedreports
 
+import android.os.Bundle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -14,10 +15,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import rahulstech.android.weathersnap.ui.component.InfoBox
 import rahulstech.android.weathersnap.ui.component.WeatherSnapHeader
+import rahulstech.android.weathersnap.ui.navigation.AppRoute
 import rahulstech.android.weathersnap.ui.theme.WeatherSnapTheme
 
+
 @Composable
-fun SavedReportsScreen() {
+fun SavedReportsRoute(
+    onNavigate: (AppRoute) -> Unit,
+    onExit: () -> Unit
+) {
+    SavedReportsScreen(
+        onNavigate = onNavigate,
+        onExit = onExit
+    )
+}
+@Composable
+fun SavedReportsScreen(
+    onNavigate: (AppRoute) -> Unit,
+    onExit: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -29,7 +45,7 @@ fun SavedReportsScreen() {
             title = "Saved Reports",
             subtitle = "1 report stored locally",
             actionLabel = "Back",
-            onAction = {},
+            onAction = onExit,
         )
 
         LazyColumn(
@@ -145,6 +161,6 @@ fun ReportNote(note: String, modifier: Modifier = Modifier) {
 @Composable
 fun SavedReportsScreenPreview() {
     WeatherSnapTheme {
-        SavedReportsScreen()
+        SavedReportsScreen(onNavigate = {}, onExit = {})
     }
 }

@@ -20,12 +20,40 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import rahulstech.android.weathersnap.ui.model.WeatherReport
+import rahulstech.android.weathersnap.ui.util.Resource
 import rahulstech.android.weathersnap.ui.util.getWeatherCondition
 import rahulstech.android.weathersnap.ui.util.shimmer
-import java.time.format.DateTimeFormatter
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import rahulstech.android.weathersnap.ui.theme.WeatherSnapTheme
+import java.time.LocalDateTime
 
 @Composable
 fun WeatherInfoCard(
+    weatherResource: Resource<WeatherReport>,
+    modifier: Modifier = Modifier
+) {
+    when (weatherResource) {
+        is Resource.Loading -> {
+            WeatherInfoShimmerCard(modifier = modifier)
+        }
+        is Resource.Success -> {
+            WeatherInfoSuccessCard(report = weatherResource.data, modifier = modifier)
+        }
+        is Resource.Error -> {
+            WeatherInfoErrorCard(
+                message = weatherResource.cause.message ?: "Unknown error",
+                modifier = modifier
+            )
+        }
+        Resource.Idle -> {
+            // Can be handled by caller or shown as empty
+        }
+    }
+}
+
+@Composable
+fun WeatherInfoSuccessCard(
     report: WeatherReport,
     modifier: Modifier = Modifier
 ) {
@@ -34,7 +62,9 @@ fun WeatherInfoCard(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -68,10 +98,50 @@ fun WeatherInfoCard(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            InfoBox(label = "Humidity", text = "${report.humidity}%", textColor = Color(0xFF4CAF50), modifier = Modifier.weight(1f))
-            InfoBox(label = "Wind", text = "${report.windSpeed} m/s", textColor = Color(0xFF42A5F5), modifier = Modifier.weight(1f))
-            InfoBox(label = "Pressure", text = "${report.surfacePressure}", textColor = Color(0xFFFFB74D), modifier = Modifier.weight(1f))
+            InfoBox(
+                label = "Humidity",
+                text = "${report.humidity}%",
+                textColor = Color(0xFF4CAF50),
+                modifier = Modifier.weight(1f)
+            )
+            InfoBox(
+                label = "Wind",
+                text = "${report.windSpeed} m/s",
+                textColor = Color(0xFF42A5F5),
+                modifier = Modifier.weight(1f)
+            )
+            InfoBox(
+                label = "Pressure",
+                text = "${report.surfacePressure}",
+                textColor = Color(0xFFFFB74D),
+                modifier = Modifier.weight(1f)
+            )
         }
+    }
+}
+
+@Composable
+fun WeatherInfoErrorCard(
+    message: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "Error loading weather",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.error
+        )
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -123,5 +193,29 @@ fun WeatherInfoShimmerCard(
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun WeatherInfoCardPreview() {
+    val previewData = WeatherReport(
+        id = 1,
+        cityName = "San Francisco",
+        country = "USA",
+        temperature = 18.5,
+        windSpeed = 12.0,
+        weatherCode = 1,
+        surfacePressure = 1012.0,
+        humidity = 65,
+        time = LocalDateTime.now(),
+        latitude = "",
+        longitude = ""
+    )
+    WeatherSnapTheme {
+        WeatherInfoCard(
+            weatherResource = Resource.Success(previewData),
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }

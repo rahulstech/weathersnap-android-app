@@ -10,17 +10,46 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import rahulstech.android.weathersnap.ui.component.InfoBox
 import rahulstech.android.weathersnap.ui.component.WeatherInfoCard
 import rahulstech.android.weathersnap.ui.component.WeatherSnapHeader
+import rahulstech.android.weathersnap.ui.model.ImageCaptureResult
 import rahulstech.android.weathersnap.ui.model.WeatherReport
+import rahulstech.android.weathersnap.ui.navigation.AppRoute
 import rahulstech.android.weathersnap.ui.theme.WeatherSnapTheme
+import rahulstech.android.weathersnap.ui.util.Resource
 import java.time.LocalDateTime
 
 @Composable
-fun CreateReportScreen() {
+fun CreateReportRoute(
+    onNavigate: (AppRoute) -> Unit,
+    onExit: () -> Unit,
+    viewModel: CreateReportViewModel
+) {
+    val imageCaptureResult = viewModel.imageCaptureResult
+    android.util.Log.d("CreateReportScreen", "CreateReportRoute: imageCaptureResult=$imageCaptureResult")
+    CreateReportScreen(
+        weatherResource = viewModel.weatherResource,
+        imageCaptureResult = imageCaptureResult,
+        onNavigate = onNavigate,
+        onExit = onExit
+    )
+}
+
+@Composable
+fun CreateReportScreen(
+    weatherResource: Resource<WeatherReport>,
+    imageCaptureResult: ImageCaptureResult?,
+    onNavigate: (AppRoute) -> Unit,
+    onExit: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -33,12 +62,15 @@ fun CreateReportScreen() {
             title = "Create Report",
             subtitle = "Capture, compress, annotate",
             actionLabel = "Back",
-            onAction = {}
+            onAction = onExit
         )
 
-        WeatherInfoSection()
+        WeatherInfoSection(weatherResource = weatherResource)
 
-        PhotoCaptureCard()
+        PhotoCaptureCard(
+            imageCaptureResult = imageCaptureResult,
+            onCaptureClick = { onNavigate(AppRoute.Camera) }
+        )
 
         NotesCard()
 
@@ -53,31 +85,23 @@ fun CreateReportScreen() {
 }
 
 @Composable
-fun WeatherInfoSection() {
+fun WeatherInfoSection(weatherResource: Resource<WeatherReport>) {
     Card(
         shape = MaterialTheme.shapes.large,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        val dummyReport = WeatherReport(
-            id = 1,
-            cityName = "Placeholder City",
-            country = "Country",
-            temperature = 20.0,
-            windSpeed = 5.0,
-            weatherCode = 0,
-            surfacePressure = 1013.25,
-            humidity = 50,
-            time = LocalDateTime.now()
-        )
         WeatherInfoCard(
-            report = dummyReport,
+            weatherResource = weatherResource,
             modifier = Modifier.padding(16.dp)
         )
     }
 }
 
 @Composable
-fun PhotoCaptureCard() {
+fun PhotoCaptureCard(
+    imageCaptureResult: ImageCaptureResult?,
+    onCaptureClick: () -> Unit
+) {
     Card(
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
@@ -104,19 +128,60 @@ fun PhotoCaptureCard() {
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Photo preview",
-                    color = Color.White.copy(alpha = 0.6f),
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                if (imageCaptureResult != null) {
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(imageCaptureResult.filePath)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Photo preview",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            InfoBox(
+                                label = "Original",
+                                text = "${imageCaptureResult.rawSize / 1024} KB",
+                                textColor = Color(0xFFFFB74D),
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            InfoBox(
+                                label = "Compressed",
+                                text = "${imageCaptureResult.compressSize / 1024} KB",
+                                textColor = Color(0xFF81C784),
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+
+                } else {
+                    Text(
+                        text = "Photo preview",
+                        color = Color.White.copy(alpha = 0.6f),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
             }
 
             Button(
-                onClick = { /* TODO */ },
+                onClick = onCaptureClick,
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.extraLarge
             ) {
-                Text("Capture Photo")
+                Text(if (imageCaptureResult == null) "Capture Photo" else "Retake Photo")
             }
         }
     }
@@ -159,7 +224,30 @@ fun NotesCard() {
 @Preview(showBackground = true)
 @Composable
 fun CreateReportScreenPreview() {
+
+    val previewData = WeatherReport(
+        id = 1,
+        cityName = "San Francisco",
+        country = "USA",
+        temperature = 18.5,
+        windSpeed = 12.0,
+        weatherCode = 1,
+        surfacePressure = 1012.0,
+        humidity = 65,
+        time = LocalDateTime.now(),
+        latitude = "37.7749",
+        longitude = "-122.4194"
+    )
     WeatherSnapTheme {
-        CreateReportScreen()
+        CreateReportScreen(
+            weatherResource = Resource.Success(previewData),
+            imageCaptureResult = ImageCaptureResult(
+                filePath = "",
+                rawSize = 1024 * 100,
+                compressSize = 1024 * 40
+            ),
+            onNavigate = {},
+            onExit = {}
+        )
     }
 }

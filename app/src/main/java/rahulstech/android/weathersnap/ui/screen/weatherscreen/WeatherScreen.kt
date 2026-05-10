@@ -23,25 +23,29 @@ import rahulstech.android.weathersnap.ui.theme.WeatherSnapTheme
 import rahulstech.android.weathersnap.ui.util.Resource
 
 import rahulstech.android.weathersnap.data.remote.model.CitySearchRemote
+import rahulstech.android.weathersnap.ui.navigation.AppRoute
 
 @Composable
-fun WeatherScreen(
+fun WeatherRoute(
+    onNavigate: (AppRoute) -> Unit,
     viewModel: WeatherScreenViewModel = hiltViewModel()
 ) {
-    WeatherScreenContent(
+    WeatherScreen(
         citySearchResource = viewModel.citySearchResource,
         weatherResource = viewModel.weatherResource,
         onSearchCities = { viewModel.searchCities(it) },
-        onFetchWeather = { viewModel.fetchWeather(it) }
+        onFetchWeather = { viewModel.fetchWeather(it) },
+        onNavigate = onNavigate,
     )
 }
 
 @Composable
-fun WeatherScreenContent(
+fun WeatherScreen(
     citySearchResource: Resource<List<CitySearchRemote>>,
     weatherResource: Resource<WeatherReport>,
     onSearchCities: (String) -> Unit,
-    onFetchWeather: (CitySearchRemote) -> Unit
+    onFetchWeather: (CitySearchRemote) -> Unit,
+    onNavigate: (AppRoute) -> Unit,
 ) {
 
 
@@ -57,7 +61,7 @@ fun WeatherScreenContent(
             title = "WeatherSnap",
             subtitle = "Live weather reports with camera evidence",
             actionLabel = "Reports",
-            onAction = {}
+            onAction = { onNavigate(AppRoute.SavedReports) }
         )
 
         CitySearchBar(
@@ -67,7 +71,8 @@ fun WeatherScreenContent(
         )
 
         WeatherInfoSection(
-            weatherResource = weatherResource
+            weatherResource = weatherResource,
+            onNavigate = onNavigate
         )
     }
 }
@@ -191,7 +196,8 @@ fun SearchResultSection(
 
 @Composable
 fun WeatherInfoSection(
-    weatherResource: Resource<WeatherReport>
+    weatherResource: Resource<WeatherReport>,
+    onNavigate: (AppRoute) -> Unit
 ) {
     Card(
         shape = MaterialTheme.shapes.large,
@@ -201,14 +207,12 @@ fun WeatherInfoSection(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            when (weatherResource) {
-                is Resource.Loading -> {
-                    WeatherInfoShimmerCard()
-                }
-                is Resource.Success -> {
-                    val report = weatherResource.data
-                    WeatherInfoCard(report = report)
+            if (weatherResource is Resource.Idle) {
+                EmptyWeatherCard()
+            } else {
+                WeatherInfoCard(weatherResource = weatherResource)
 
+                if (weatherResource is Resource.Success) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -235,34 +239,18 @@ fun WeatherInfoSection(
                     }
 
                     Button(
-                        onClick = { /* TODO */ },
+                        onClick = {
+                            val report = weatherResource.data
+                            onNavigate(
+                                AppRoute.CreateReport(
+                                    city = CitySearchRemote(id=0,name=report.cityName, country = report.country, report.latitude, report.longitude)
+                                )
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Create Report", fontWeight = FontWeight.Bold)
                     }
-                }
-                is Resource.Error -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "Error loading weather",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Text(
-                            text = weatherResource.cause.message ?: "Unknown error",
-                            style = MaterialTheme.typography.bodySmall,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-                Resource.Idle -> {
-                    EmptyWeatherCard()
                 }
             }
         }
@@ -315,12 +303,12 @@ fun EmptyWeatherCard() {
 @Composable
 fun WeatherScreenPreview() {
     WeatherSnapTheme {
-        WeatherScreenContent(
+        WeatherScreen(
             citySearchResource = Resource.Idle,
             weatherResource = Resource.Idle,
             onSearchCities = {},
-            onFetchWeather = {}
-
+            onFetchWeather = {},
+            onNavigate = {},
         )
     }
 }
