@@ -15,7 +15,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import rahulstech.android.weathersnap.ui.component.WeatherInfoCard
 import rahulstech.android.weathersnap.ui.component.WeatherSnapHeader
+import rahulstech.android.weathersnap.ui.model.WeatherReport
 import rahulstech.android.weathersnap.ui.theme.WeatherSnapTheme
+import java.time.LocalDateTime
 
 @Composable
 fun CreateReportScreen() {
@@ -56,7 +58,21 @@ fun WeatherInfoSection() {
         shape = MaterialTheme.shapes.large,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        WeatherInfoCard(modifier = Modifier.padding(16.dp))
+        val dummyReport = WeatherReport(
+            id = 1,
+            cityName = "Placeholder City",
+            country = "Country",
+            temperature = 20.0,
+            windSpeed = 5.0,
+            weatherCode = 0,
+            surfacePressure = 1013.25,
+            humidity = 50,
+            time = LocalDateTime.now()
+        )
+        WeatherInfoCard(
+            report = dummyReport,
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
 

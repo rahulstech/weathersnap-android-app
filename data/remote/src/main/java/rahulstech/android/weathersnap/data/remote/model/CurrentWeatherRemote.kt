@@ -18,5 +18,7 @@ data class CurrentWeatherRemote(
     @SerializedName("weather_code")
     val weatherCode: Int,
     @SerializedName("surface_pressure")
-    val surfacePressure: Double
+    val surfacePressure: Double,
+    @SerializedName("relative_humidity_2m")
+    val humidity: Int
 )

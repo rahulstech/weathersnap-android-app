@@ -21,6 +21,6 @@ interface WeatherApi {
     suspend fun getCurrentWeather(
         @Query("latitude") latitude: String,
         @Query("longitude") longitude: String,
-        @Query("current") current: String = "temperature_2m,wind_speed_10m,weather_code,surface_pressure"
+        @Query("current") current: String = "temperature_2m,wind_speed_10m,weather_code,surface_pressure,relative_humidity_2m"
     ): CurrentWeatherResponse
 }
