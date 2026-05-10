@@ -3,6 +3,7 @@ package rahulstech.android.weathersnap.data.remote
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import okhttp3.Cache
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import rahulstech.android.weathersnap.data.remote.api.CityApi
@@ -10,6 +11,7 @@ import rahulstech.android.weathersnap.data.remote.api.WeatherApi
 import rahulstech.android.weathersnap.data.remote.model.LocalDateTimeAdapter
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.File
 import java.time.LocalDateTime
 
 /**
@@ -17,14 +19,17 @@ import java.time.LocalDateTime
  *
  * @property weatherBaseUrl The base URL for the weather API.
  * @property cityBaseUrl The base URL for the city search API.
+ * @property cacheDir The directory where the HTTP cache will be stored.
  */
 class WeatherClient(
     private val weatherBaseUrl: String,
-    private val cityBaseUrl: String
+    private val cityBaseUrl: String,
+    private val cacheDir: File
 ) {
 
     companion object {
         private const val TAG = "WeatherClient"
+        private const val CACHE_SIZE = 10L * 1024 * 1024 // 10 MB
     }
 
     private val gson: Gson by lazy {
@@ -41,6 +46,7 @@ class WeatherClient(
     }
 
     private val okHttpClient = OkHttpClient.Builder()
+        .cache(Cache(cacheDir, CACHE_SIZE))
         .addInterceptor(loggingInterceptor)
         .build()
 

@@ -7,10 +7,15 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import rahulstech.android.weathersnap.data.remote.WeatherClient
 
 class CityApiTest {
+
+    @get:Rule
+    val tempFolder = TemporaryFolder()
 
     private lateinit var mockWebServer: MockWebServer
     private lateinit var weatherClient: WeatherClient
@@ -21,7 +26,7 @@ class CityApiTest {
         mockWebServer.start()
         val baseUrl = mockWebServer.url("/").toString()
         // Both URLs pointing to mock server for simplicity in this test
-        weatherClient = WeatherClient(baseUrl, baseUrl)
+        weatherClient = WeatherClient(baseUrl, baseUrl, tempFolder.newFolder("http_cache"))
     }
 
     @After

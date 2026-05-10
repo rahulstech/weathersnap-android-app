@@ -35,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +55,8 @@ import rahulstech.android.weathersnap.ui.model.ImageCaptureResult
 import rahulstech.android.weathersnap.ui.theme.WeatherSnapTheme
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 
 @Composable
 fun CameraRoute(
@@ -75,6 +78,14 @@ fun CameraScreen(
     onCapture: (ImageCaptureResult) -> Unit = {},
 ) {
     val context = LocalContext.current
+    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            cameraExecutor.shutdown()
+        }
+    }
+
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -167,7 +178,7 @@ fun CameraScreen(
         // Bottom Capture Button
         Button(
             onClick = {
-                captureAndProcessImage(context, imageCapture, onCapture)
+                captureAndProcessImage(context, imageCapture, cameraExecutor, onCapture)
             },
             enabled = hasCameraPermission,
             modifier = Modifier
@@ -187,6 +198,7 @@ fun CameraScreen(
 private fun captureAndProcessImage(
     context: Context,
     imageCapture: ImageCapture,
+    cameraExecutor: Executor,
     onCapture: (ImageCaptureResult) -> Unit
 ) {
     Log.d("CameraScreen", "captureAndProcessImage: started")
@@ -197,7 +209,7 @@ private fun captureAndProcessImage(
 
     imageCapture.takePicture(
         outputOptions,
-        ContextCompat.getMainExecutor(context),
+        cameraExecutor,
         object : ImageCapture.OnImageSavedCallback {
             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                 val compressedFile = File(context.cacheDir, "compress_$timestamp.jpg")
@@ -215,7 +227,9 @@ private fun captureAndProcessImage(
                     capturedFile.delete()
 
                     // Return results
-                    onCapture(ImageCaptureResult(compressedFile.absolutePath, originalSize, compressedSize))
+                    ContextCompat.getMainExecutor(context).execute {
+                        onCapture(ImageCaptureResult(compressedFile.absolutePath, originalSize, compressedSize))
+                    }
 
                 } catch (e: Exception) {
                     Log.e("CameraScreen", "Error processing image", e)
