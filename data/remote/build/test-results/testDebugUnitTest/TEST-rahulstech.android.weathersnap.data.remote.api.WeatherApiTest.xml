@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="rahulstech.android.weathersnap.data.remote.api.WeatherApiTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-10T10:10:35" hostname="rahuls-laptop" time="2.469">
+  <properties/>
+  <testcase name="testGetCurrentWeatherSuccess" classname="rahulstech.android.weathersnap.data.remote.api.WeatherApiTest" time="2.469"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

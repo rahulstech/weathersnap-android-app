@@ -10,6 +10,8 @@
           <set>
             <option value="/mnt/hdd/AndroidStudioProjects/WeatherSnap" />
             <option value="/mnt/hdd/AndroidStudioProjects/WeatherSnap/app" />
+            <option value="/mnt/hdd/AndroidStudioProjects/WeatherSnap/data" />
+            <option value="/mnt/hdd/AndroidStudioProjects/WeatherSnap/data/remote" />
           </set>
         </option>
       </GradleProjectSettings>
@@ -20,6 +22,8 @@
           <set>
             <option value="/mnt/hdd/AndroidStudioProjects/WeatherSnap" />
             <option value="/mnt/hdd/AndroidStudioProjects/WeatherSnap/app" />
+            <option value="/mnt/hdd/AndroidStudioProjects/WeatherSnap/data" />
+            <option value="/mnt/hdd/AndroidStudioProjects/WeatherSnap/data/remote" />
           </set>
         </option>
       </GradleProjectSettings>
